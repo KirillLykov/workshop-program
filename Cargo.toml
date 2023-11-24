@@ -1,0 +1,18 @@
+[profile.release-with-debug]
+inherits = "release"
+debug = true
+split-debuginfo = "packed"
+
+[workspace]
+members = ["naive-client", "workshop-program"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Kirill"]
+repository = "todo"
+license = "Apache-2.0"
+edition = "2021"
+
+[workspace.dependencies]
+workshop-program = { path = "workshop-program", version = "=0.1.0" }

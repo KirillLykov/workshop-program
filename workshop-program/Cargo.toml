@@ -1,0 +1,22 @@
+
+[package]
+name = "workshop-program"
+version = { workspace = true }
+description = "Program for workshop"
+license = { workspace = true }
+edition = { workspace = true }
+
+[features]
+no-entrypoint = []
+
+[dependencies]
+borsh = "0.10.3"
+solana-program = "1.17.6"
+
+[dev-dependencies]
+solana-program-test = "1.17.6"
+solana-sdk = "1.17.6"
+
+[lib]
+name = "program_workshop"
+crate-type = ["cdylib", "lib"]
