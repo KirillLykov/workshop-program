@@ -1,8 +1,15 @@
 use {
+    program_workshop::WorkshopProgramInstruction,
     solana_rpc_client::rpc_client::RpcClient,
     solana_sdk::{
-        native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, signature::Keypair, signature::Signer,
-        system_instruction, system_program, transaction::Transaction,
+        instruction::{AccountMeta, Instruction},
+        message::Message,
+        native_token::LAMPORTS_PER_SOL,
+        pubkey::Pubkey,
+        signature::Keypair,
+        signature::Signer,
+        system_instruction, system_program,
+        transaction::Transaction,
     },
     std::{thread::sleep, time::Duration},
 };
@@ -22,6 +29,9 @@ pub fn request_airdrop(rpc_client: &RpcClient, beneficiary: &Pubkey, balance_sol
 }
 
 fn main() {
+    let program_id = Pubkey::try_from("ConmNVrX8Dn7mrN8iUj915X5vBbg7nDC2RyQ4VobvRHN")
+        .expect("pubkey for program must be valid");
+
     let rpc_client = RpcClient::new("http://localhost:8899");
 
     // 1. Create authority and airdrop it some funds
@@ -36,7 +46,7 @@ fn main() {
     // * create transaction to create account (first try with random number for lammports to show what is rent exempt)
     // * send this transaction
     let account_keypair = Keypair::new();
-    let space = 1024;
+    let space = 8;
     let rent = rpc_client
         .get_minimum_balance_for_rent_exemption(space)
         .expect("must get rent exempt");
@@ -46,7 +56,7 @@ fn main() {
         &account_keypair.pubkey(),
         rent,
         space as u64,
-        &system_program::ID,
+        &program_id, // &system_program::ID,
     );
     let blockhash = rpc_client
         .get_latest_blockhash()
@@ -71,4 +81,16 @@ fn main() {
     // To deploy it `solana -ul program deploy target/deploy/program_workshop.so  --program-id target/deploy/program_workshop-keypair.json``
 
     // 4. Create instruction for our program
+    let data = WorkshopProgramInstruction::Add { increment: 11 };
+    let accounts_meta = vec![AccountMeta::new(account_keypair.pubkey(), false)];
+    let add_instruction = Instruction::new_with_borsh(program_id, &data, accounts_meta.to_vec());
+    let message = Message::new(&[add_instruction], Some(&payer.pubkey()));
+    let tx = Transaction::new(&[&payer], message, blockhash);
+    let _sign = rpc_client.send_and_confirm_transaction(&tx);
+
+    // check what is in the account again
+    let acc = rpc_client
+        .get_account(&account_keypair.pubkey())
+        .expect("get_account works");
+    println!("Here it is my account: {:?}", acc);
 }
